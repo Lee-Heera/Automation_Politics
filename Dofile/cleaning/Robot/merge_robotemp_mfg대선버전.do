@@ -71,7 +71,7 @@ local bases  2007   2007   2007   2012   2017
 
 local n : word count `specs'
 
-foreach base_emp in 2005 2006 2007 {
+foreach base_emp in 2005 {
     forvalues i = 1/`n' {
         local sp : word `i' of `specs'
         local by : word `i' of `bases'
@@ -99,7 +99,7 @@ duplicates drop year regioncode, force
 keep if year==2007 | year==2012 | year==2017 | year==2022
 
 * First difference -> stacked
-foreach base_emp in 2005 2006 2007 {
+foreach base_emp in 2005 {
     * X: 세 cohort 중 해당 행에 값 있는 것 하나로 합치기
     gen X_SD`base_emp'_mfg = .
     replace X_SD`base_emp'_mfg = X`base_emp'_0712_mfg if !missing(X`base_emp'_0712_mfg)
@@ -117,7 +117,7 @@ foreach base_emp in 2005 2006 2007 {
 }
 
 * Long difference 이름 변경
-foreach base_emp in 2005 2006 2007 {
+foreach base_emp in 2005 {
     * rename: X2005_0717_mfg → X_LD2005_0717_mfg
     rename X`base_emp'_0717_mfg  X_LD`base_emp'_0717_mfg
     rename X`base_emp'_0722_mfg  X_LD`base_emp'_0722_mfg
@@ -130,13 +130,13 @@ foreach base_emp in 2005 2006 2007 {
     label variable IV_LD`base_emp'_0722_mfg "Bartik IV LD (manufacturing, 2007→2022, empbase=`base_emp', SG)"
 }
 
-keep year regioncode newindcode firm sido_nm sigungu_nm newind X_LD2005_0717_mfg IV_LD2005_0717_mfg X_LD2005_0722_mfg IV_LD2005_0722_mfg X2005_0712_mfg IV2005_0712_mfg X2005_1217_mfg IV2005_1217_mfg X2005_1722_mfg IV2005_1722_mfg X_LD2006_0717_mfg IV_LD2006_0717_mfg X_LD2006_0722_mfg IV_LD2006_0722_mfg X2006_0712_mfg IV2006_0712_mfg X2006_1217_mfg IV2006_1217_mfg X2006_1722_mfg IV2006_1722_mfg X_LD2007_0717_mfg IV_LD2007_0717_mfg X_LD2007_0722_mfg IV_LD2007_0722_mfg X2007_0712_mfg IV2007_0712_mfg X2007_1217_mfg IV2007_1217_mfg X2007_1722_mfg IV2007_1722_mfg X_SD2005_mfg IV_SD2005_mfg X_SD2006_mfg IV_SD2006_mfg X_SD2007_mfg IV_SD2007_mfg
+isid newindcode year regioncode 
+
+keep year regioncode sido_nm sigungu_nm X_LD2005_0717_mfg IV_LD2005_0717_mfg X_LD2005_0722_mfg IV_LD2005_0722_mfg X2005_0712_mfg IV2005_0712_mfg X2005_1217_mfg IV2005_1217_mfg X2005_1722_mfg IV2005_1722_mfg X_SD2005_mfg IV_SD2005_mfg
 
 duplicates drop year regioncode, force
 tab year // 지역 229개씩 
 
 isid year regioncode
-
-drop newindcode newind 
 
 save "$data/X_final_mfg.dta", replace

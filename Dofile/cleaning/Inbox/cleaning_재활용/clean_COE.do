@@ -19,17 +19,30 @@ clear all
 ********************************************************************** 
 use "$prof_raw/employmentCOE.dta" 
 
-********* 필터링 / 기본변수 만들기 
 tab newindcode // 101~119 까지 사용 
+
 keep if newindcode >= 101 & newindcode <= 119 
+
 drop if year < 1995 
-drop fullempl partempl 
 
 replace allempl = allempl/1000  // 1000명 단위
+replace fullempl = fullempl/1000
+replace partempl = partempl/1000
+
+/*
+* wood & furniture 통합 (필요 시 주석 해제)
+replace newindcode = 118 if newindcode == 119
+replace newind = "other manufacturing" if newindcode == 118
+collapse (sum) fullempl partempl allempl firm, by(year sido_nm sigungu_nm regioncode newindcode newind)
+*/
 
 tab newindcode year 
 ********************************************************************** 
 * 사업체 없는 (region × industry × year) 조합에 0 채우기
+
+* ── 1. fillin 전에 string lookup 보존 ───────────────────────────────────────
+* fillin은 새 행의 string 변수를 missing으로 만들므로 미리 저장
+* isid: 코드 → 라벨이 진짜 1:1인지 명시 검증 (깨지면 코드 충돌)
 preserve
     keep regioncode sido_nm sigungu_nm
     duplicates drop
@@ -46,18 +59,24 @@ preserve
     save `ind_lut'
 restore
 
+* ── 2. fillin: 존재하지 않는 조합 추가 ──────────────────────────────────────
 fillin year regioncode newindcode
 
-foreach var of varlist allempl firm {
+* ── 3. 수치 변수 0 채우기 (사업체 없음 = 고용 0) ──────────────────────────
+foreach var of varlist allempl fullempl partempl firm {
     replace `var' = 0 if _fillin == 1
 }
 
 quietly count if _fillin == 1
 di "fillin 추가 셀: " r(N) "개 (전체의 " %4.1f r(N)/_N*100 "%)"
 
+* ── 4. string 변수 lookup에서 복원 (mode() 대신 merge) ─────────────────────
+* fillin이 만든 새 행 포함 모든 행이 매칭돼야 함 → assert(3)으로 보장
 drop sido_nm sigungu_nm newind
 merge m:1 regioncode using `region_lut', nogen assert(3)
 merge m:1 newindcode  using `ind_lut',   nogen assert(3)
+
+br 
 
 ********************************************************************
 * 확인 
@@ -70,17 +89,17 @@ preserve
     assert n_region == 229
 restore
 ********************************************************************
-* emp i,j,t /  emp i,t / emp j,t 
-**********************************************************************
+* emp i,j,t 
 * emp i,t 
+* emp j,t 
+**********************************************************************
+// 원본 변수명 정리
 rename allempl emp_ijt
 label variable emp_ijt "All employment in region i, industry j, year t"
 
-* emp i,t 
 bysort regioncode year: egen emp_it = total(emp_ijt)
 label variable emp_it "Total employment in region i, year t"
 
-* emp j,t
 bysort newindcode year: egen emp_jt = total(emp_ijt)
 label variable emp_jt "Total employment in industry j, year t"
 
@@ -88,7 +107,7 @@ save "$interim/COE_empl_control.dta" , replace
 *********************************************************************
 * base year 기준 
 *********************************************************************
-foreach yr in 1995 2005 {
+foreach yr in 1995 2005 2006 2007 2008 2009 2010 2011 2012 2013 2014 2015 2016 2017 2018 2019 2020 2021 2022  {
     preserve
         keep if year == `yr'
         keep regioncode newindcode emp_ijt emp_it emp_jt
@@ -107,23 +126,27 @@ foreach yr in 1995 2005 {
 **********************************************************************
 * Employment Shares 계산
 ********************************************************************** 
-* 1995년도용 (IV)
 count if emp_i1995==0 // 532개(울산광역시 북구)
 count if missing(emp_i1995) // 없음 
 gen share95 = emp_ij1995 / emp_i1995 
-replace share95 = 0 if emp_i1995==0 // 울산광역시 북구: 분모 0 (KOSIS 확인결과 0)
+replace share95 = 0 if emp_i1995==0 // 울산광역시 북구의 경우 분모가 0 (KOSIS에서 확인결과 0)
 label variable share95 "Employment share (1995 base): emp_ij1995 / emp_i1995" 
 
-* 2005년도용 (X)
-count if emp_i2005==0
-count if missing(emp_i2005)
-gen share2005 = emp_ij2005 / emp_i2005
-replace share2005 = 0 if emp_i2005==0   // count 결과 0이면 이 줄은 영향 없음
-label variable share2005 "Employment share (2005 base): emp_ij2005 / emp_i2005"
+foreach yr in 2005 2006 2007 2008 2009 2010 2011 2012 2013 2014 2015 2016 2017 2018 2019 2020 2021 2022 { 
+	
+	count if emp_i`yr' == 0 
+	count if missing(emp_i`yr')
+	gen share`yr' = emp_ij`yr' / emp_i`yr'
+	label variable share`yr' ///
+	"Employment share (`yr' base): emp_ij`yr' / emp_i`yr'"
+}
 *******************************************************************************
-drop _fillin emp_ijt emp_it emp_jt 
+drop _fillin fullempl partempl emp_ijt emp_it emp_jt 
 
 sort year regioncode newindcode 
+// keep if year >= 2005 
+// time period 1995~2022
+
 save "$data/kor_empl.dta",replace
 **********************************************************************
 * 제조업만 포함 버전 (newindcode 107~119)
@@ -137,12 +160,10 @@ rename emp_ijt emp_ijt_manu
 label variable emp_ijt_manu "Manufacturing employment in region i, industry j, year t"
 
 drop emp_jt
-
-* emp j,t (only manufacturing)
 bysort newindcode year: egen emp_jt_manu = total(emp_ijt_manu)
 label variable emp_jt_manu "Total manufacturing employment in industry j, year t"
 
-foreach yr in 1995 2005 {
+foreach yr in 1995 2005 2006 2007 2008 2009 2010 2011 2012 2013 2014 2015 2016 2017 2018 2019 2020 2021 2022  {
     preserve
         keep if year == `yr'
         keep regioncode newindcode emp_ijt_manu emp_it emp_jt_manu
@@ -158,22 +179,22 @@ foreach yr in 1995 2005 {
     label variable emp_j`yr'_manu  "Total manufacturing employment in industry j, year `yr'"
 }
 
-
-* Employment share (1995년도, IV용)
 count if emp_i1995==0
 count if missing(emp_i1995)
 gen share95_manu = emp_ij1995_manu / emp_i1995
 replace share95_manu = 0 if emp_i1995==0
 label variable share95_manu "Manufacturing employment share (1995 base): emp_ij1995_manu / emp_i1995 (전산업 대비)"
 
-* Employment share (2005년도, X)
-count if emp_i2005==0
-count if missing(emp_i2005)
-gen share2005_manu = emp_ij2005_manu / emp_i2005
-replace share2005_manu = 0 if emp_i2005==0
-label variable share2005_manu "Manufacturing employment share (2005 base): emp_ij2005_manu / emp_i2005 (전산업 대비)"
+foreach yr in 2005 2006 2007 2008 2009 2010 2011 2012 2013 2014 2015 2016 2017 2018 2019 2020 2021 2022 {
+	count if emp_i`yr' == 0
+	count if missing(emp_i`yr')
+	gen share`yr'_manu = emp_ij`yr'_manu / emp_i`yr'
+	label variable share`yr'_manu ///
+	"Manufacturing employment share (`yr' base): emp_ij`yr'_manu / emp_i`yr' (전산업 대비)"
+}
 
-drop _fillin 
+drop _fillin fullempl partempl emp_ijt_manu emp_it emp_jt_manu
 
 sort year regioncode newindcode
-save "$data/kor_empl_mfg.dta",replace 
+
+save "$data/kor_empl_mfg.dta",replace

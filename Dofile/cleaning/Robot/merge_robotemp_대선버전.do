@@ -22,6 +22,7 @@ use "$data/kor_empl.dta"
 merge m:1 newindcode using "$data/sgp_empl.dta" , nogen assert(3)
 
 merge m:1 newindcode using "$data/IFR_robot.dta", nogen assert(3)
+// IFR_robot1.dta s
 
 **********************************************************************
 * 대선 연도와 구간에 맞춰서 만들기 
@@ -39,28 +40,6 @@ foreach ctr in kr sg {
     gen drobot_`ctr'_1722 = rb_`ctr'2022 - rb_`ctr'2017
 }
 
-/*
-count if drobot_kr_0712 < 0
-tab newindcode if drobot_kr_0712 < 0 // 102, 108, 119 
-di r(N)/121828 * 100 "%"
-
-count if drobot_kr_1217 < 0
-tab newindcode if drobot_kr_1217 < 0 // 102, 105, 108 
-di r(N)/121828 * 100 "%"
-
-count if drobot_kr_1722 < 0
-tab newindcode if drobot_kr_1722 < 0 // 103, 110, 113 
-di r(N)/121828 * 100 "%"
-
-sum drobot_kr_*, detail 
-*/
-// 102: mining 
-// 103: utility 
-// 105: education, research, development 
-// 108: textiles 
-// 110: plastics and chemicals 
-// 113: metal products 
-// 119: wood and furniture 
 **********************************************************************
 * STEP 2: Bartik X / IV 계산
 * X  = Σ_j share07_ij  × ΔRobot_kr_j / emp_j2007
@@ -71,7 +50,7 @@ local bases  2007   2007   2007   2012   2017
 
 local n : word count `specs'
 
-foreach base_emp in 2005 2006 2007 {
+foreach base_emp in 2005{
     forvalues i = 1/`n' {
         local sp : word `i' of `specs'
         local by : word `i' of `bases'
@@ -99,7 +78,7 @@ duplicates drop year regioncode, force
 keep if year==2007 | year==2012 | year==2017 | year==2022 
 
 * First difference -> stacked 
-foreach base_emp in 2005 2006 2007 {
+foreach base_emp in 2005 {
     * X: 세 cohort 중 해당 행에 값 있는 것 하나로 합치기
     gen X_SD`base_emp' = .
     replace X_SD`base_emp' = X`base_emp'_0712 if !missing(X`base_emp'_0712)
@@ -117,7 +96,7 @@ foreach base_emp in 2005 2006 2007 {
 }
 
 * Long difference 이름 변경 
-foreach base_emp in 2005 2006 2007 {
+foreach base_emp in 2005{
     * rename: X2005_0717 → X_LD2005_0717
     rename X`base_emp'_0717  X_LD`base_emp'_0717
     rename X`base_emp'_0722  X_LD`base_emp'_0722
@@ -130,13 +109,13 @@ foreach base_emp in 2005 2006 2007 {
     label variable IV_LD`base_emp'_0722 "Bartik IV LD (2007→2022, empbase=`base_emp', SG)"
 }
 
-keep year regioncode newindcode firm sido_nm sigungu_nm newind X_LD2005_0717 IV_LD2005_0717 X_LD2005_0722 IV_LD2005_0722 X2005_0712 IV2005_0712 X2005_1217 IV2005_1217 X2005_1722 IV2005_1722 X_LD2006_0717 IV_LD2006_0717 X_LD2006_0722 IV_LD2006_0722 X2006_0712 IV2006_0712 X2006_1217 IV2006_1217 X2006_1722 IV2006_1722 X_LD2007_0717 IV_LD2007_0717 X_LD2007_0722 IV_LD2007_0722 X2007_0712 IV2007_0712 X2007_1217 IV2007_1217 X2007_1722 IV2007_1722 X_SD2005 IV_SD2005 X_SD2006 IV_SD2006 X_SD2007 IV_SD2007
+isid newindcode year regioncode 
+
+keep year regioncode sido_nm sigungu_nm X_LD2005_0717 IV_LD2005_0717 X_LD2005_0722 IV_LD2005_0722 X2005_0712 IV2005_0712 X2005_1217 IV2005_1217 X2005_1722 IV2005_1722 X_SD2005 IV_SD2005
 
 duplicates drop year regioncode, force
 tab year // 지역 229개씩 
 
 isid year regioncode
-
-drop newindcode newind 
 
 save "$data/X_final.dta", replace

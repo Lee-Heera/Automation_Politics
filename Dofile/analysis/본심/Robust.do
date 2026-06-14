@@ -21,7 +21,6 @@ use "$final/Final_president.dta"
 global fixed i.year 
 global control aged_share college_share 
 global additional immi_share manu_share 
-
 *******************************************************************************
 * controlling for pretrend 용 변수 
 * SD pretrend: 각 코호트의 직전 SD값 (bysort로 lag)

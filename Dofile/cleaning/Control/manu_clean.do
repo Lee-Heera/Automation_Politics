@@ -18,7 +18,7 @@ clear all
 **********************************************************************	
 use "$interim/COE_empl_control.dta"  // COE 데이터에서 나온 고용비율 보고 -> 제조업 비율 산출하기 
 
-keep year regioncode newindcode fullempl partempl emp_ijt firm  sido_nm sigungu_nm newind emp_it 
+keep year regioncode newindcode emp_ijt firm  sido_nm sigungu_nm newind emp_it 
 
 isid year regioncode newindcode // unique 
 
@@ -30,7 +30,6 @@ drop if sido_nm=="세종특별자치시"
 */
 
 tab year 
-
 
 * 제조업 더미
 gen is_mfg = (newindcode >= 107 & newindcode <= 119) // 제조업 newindcode: 107~119

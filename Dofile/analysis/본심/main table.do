@@ -24,7 +24,7 @@ sort regioncode year
 xtset regioncode year  // 
 *******************************************************************************
 * construct the migration share 
-gen migra_share = pop_migra/pop
+gen migra_share = pop_migra/pop // 음수는 유출인구 증가한다는 의미, 양수는 유입인구 
 
 bysort regioncode (year): gen SD_migra = migra_share[_n+1] - migra_share
 // 2012년 share - 2007년 share

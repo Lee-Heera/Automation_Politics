@@ -32,7 +32,7 @@ bysort regioncode (year): gen SD_migra = migra_share[_n+1] - migra_share
 order year regioncode sido_nm sigungu_nm 
 global fixed i.year 
 global control aged_share college_share 
-global additional immi_share manu_share 
+global additional immi_share manu_share migra_share
 
 encode sido_nm, generate(sido_id)
 
@@ -68,6 +68,8 @@ drop high_temp
 
 *************************Summary statistics **********************************
 cd "$main/Output/table/0607"
+
+log using "main table.smcl", replace 
 
 local outvars  SD_turnout SD_conserv1_p
 local xvars    X_SD2005 IV_SD2005 
@@ -416,3 +418,19 @@ esttab m*, stats(N r2 cdf widstat arf arfp, fmt(0 3)) ///
     star(* 0.10 ** 0.05 *** 0.01) ///
     label nogap 
 
+log close 
+
+/*
+********************** Long difference - manufacturing ****************************
+ivreg2 LD_turnout_0722 (X_LD2005_0722_mfg=IV_LD2005_0722_mfg) i.sido_id if sample==1, ///
+cluster(regioncode) robust first 
+
+ivreg2 LD_conserv1_p_0722 (X_LD2005_0722_mfg=IV_LD2005_0722_mfg) i.sido_id if sample==1, ///
+cluster(regioncode) robust first 
+************
+ivreg2 LD_turnout_0717 (X_LD2005_0712_mfg=IV_LD2005_0712_mfg) i.sido_id if sample==1, ///
+cluster(regioncode) robust first 
+
+ivreg2 LD_conserv1_p_0717 (X_LD2005_0712_mfg=IV_LD2005_0712_mfg) i.sido_id if sample==1, ///
+cluster(regioncode) robust first 
+*/

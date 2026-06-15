@@ -13,7 +13,6 @@ clear all
 	global output "${main}/Output"
 
 local mapyear 2007
-
 **********************************************************************
 * 0. korea_map.dta(시군구 경계, sigungu_cd) <-> regioncode 크로스워크
 *    - 횡단(cross-section, 250개 시군구) 단계에서 먼저 매칭

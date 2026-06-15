@@ -34,7 +34,7 @@ save `emp_panel'
 **********************************************************************
 use "$interim/IFR_figure.dta", clear
 
-keep if country == "Rep. of Korea"
+keep if country == "Rep. of Korea" 
 keep if newindcode >= 101 & newindcode <= 119   // all industries(100)/unspecified(200,300) 제외
 
 keep year newindcode newind op_stock

@@ -18,9 +18,11 @@ clear all
 *******************************************************************************
 use "$final/Final_president.dta"
 
+gen migra_share = pop_migra/pop 
+
 global fixed i.year 
 global control aged_share college_share 
-global additional immi_share manu_share 
+global additional immi_share manu_share migra_share 
 *******************************************************************************
 * controlling for pretrend 용 변수 
 * SD pretrend: 각 코호트의 직전 SD값 (bysort로 lag)
@@ -29,9 +31,8 @@ foreach v in SD_conserv1_p SD_conserv2_p SD_turnout {
     label variable pre_`v' "Pretrend `v' for SD (prev cohort SD)"
 }
 
-gen migra_share = pop_migra/pop
-
 cd "$main/Output/table/0607"
+log using "robust.smcl", replace
 *******************************************************************************
 * IV validity 
 *******************************************************************************
@@ -103,6 +104,7 @@ xi: xtivreg2 SD_conserv1_p $fixed $control $additional pre_SD_conserv1_p (X_SD20
 cluster(regioncode) robust first fe
 est store m4
 
+/*
 xi: xtivreg2 SD_turnout  $fixed $control $additional pre_SD_turnout migra_share (X_SD2005  = IV_SD2005) if sample==1, ///
 cluster(regioncode) robust first fe 
 est store m5
@@ -110,7 +112,7 @@ est store m5
 xi: xtivreg2 SD_conserv1_p $fixed $control $additional pre_SD_conserv1_p migra_share (X_SD2005  = IV_SD2005) if sample==1, ///
 cluster(regioncode) robust first fe
 est store m6
-
+*/
 esttab m* using "robust_addtional.csv", replace ///
     mtitles("(1)" "(2)" "(3)" "(4)") ///
     mgroups("Robustness_additional", pattern(1 0)) ///
@@ -192,6 +194,7 @@ xi: xtivreg2 SD_conserv1_p $fixed $control $additional pre_SD_conserv1_p (X_SD20
 cluster(regioncode) robust first fe
 est store m4
 
+/*
 xi: xtivreg2 SD_turnout  $fixed $control $additional pre_SD_turnout migra_share (X_SD2005_mfg  = IV_SD2005_mfg) if sample==1, ///
 cluster(regioncode) robust first fe 
 est store m5
@@ -199,6 +202,7 @@ est store m5
 xi: xtivreg2 SD_conserv1_p $fixed $control $additional pre_SD_conserv1_p migra_share (X_SD2005_mfg  = IV_SD2005_mfg) if sample==1, ///
 cluster(regioncode) robust first fe
 est store m6
+*/
 
 esttab m* using "robust_addtional_mfg.csv", replace ///
     mtitles("(1)" "(2)" "(3)" "(4)") ///
@@ -207,6 +211,8 @@ esttab m* using "robust_addtional_mfg.csv", replace ///
     b(%8.3f) se(%8.3f) ///
     star(* 0.10 ** 0.05 *** 0.01) ///
     label nogap 
+
+log close 
 
 /*
 ivreg2 SD_conserv1_p_1217 (X_SD2005  = IV_SD2005) if year==2012, ///

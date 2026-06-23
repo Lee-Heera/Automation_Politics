@@ -60,8 +60,4 @@ tab year
 // Final 
 // 제주도 제외 227개 지역 * 1997, 2002, 2007, 2012, 2017, 2022 
 
-replace SD_conserv1_p = SD_conserv1_p*100 
-replace SD_conserv2_p = SD_conserv2_p*100 
-replace SD_turnout =  SD_turnout*100 
-
 save "$final/Final_president.dta", replace 

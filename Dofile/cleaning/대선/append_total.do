@@ -209,6 +209,7 @@ foreach v in 1 2 {
 
     drop lib`v'_over55 con`v'_over55 solid_lib`v' solid_con`v'
 }
+
 **********************************************************************
 * 변수 정리
 drop 선거인수 투표수 유효투표수 무효투표 기권  liberal1_st conserv1_st liberal2_st conserv2_st  liberal1_p liberal2_p turnout_1992 conserv1_p_1992 conserv2_p_1992 turnout_1997 conserv1_p_1997 conserv2_p_1997 turnout_2002 conserv1_p_2002 conserv2_p_2002 turnout_2007 conserv1_p_2007 conserv2_p_2007 turnout_2012 conserv1_p_2012 conserv2_p_2012 turnout_2017 conserv1_p_2017 conserv2_p_2017 turnout_2022 conserv1_p_2022 conserv2_p_2022

@@ -99,6 +99,13 @@ preserve
         title("", size(medium))
     graph export "map_manufacturing_2007.pdf", replace //width(2000) height(2400)
 	
+	spmap conserv1_p using "`coord'", id(id) ///
+        fcolor(Blues) clmethod(quantile) clnumber(5) ///
+        legend(position(5) size(*0.8)) ///
+        title("", size(medium))
+    graph export "map_conservshare_2007.pdf", replace 
+	
+	
 	/*
     spmap LD_conserv1_p_0722 using "`coord'", id(id) ///
         fcolor(Blues) clmethod(quantile) clnumber(5) ///

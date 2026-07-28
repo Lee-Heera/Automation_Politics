@@ -103,7 +103,8 @@ preserve
         fcolor(Blues) clmethod(quantile) clnumber(5) ///
         legend(position(5) size(*0.8)) ///
         title("", size(medium))
-    graph export "map_conservshare_2007.pdf", replace 
+    graph export "map_m_2007.pdf", replace 
+	
 	
 	
 	/*
